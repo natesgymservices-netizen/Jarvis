@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { notifyNewLead } from "@/lib/email";
-import { BusinessUnit } from "@prisma/client";
 
 const ALLOWED_BUSINESSES = ["NATES_GYM_SERVICES", "FITVEND_GLOBAL", "FIT_ATLAS"] as const;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   const lead = await prisma.lead.create({
     data: {
-      business: business as BusinessUnit,
+      business: business as "NATES_GYM_SERVICES" | "FITVEND_GLOBAL" | "FIT_ATLAS",
       name,
       email: email || null,
       phone: phone || null,
