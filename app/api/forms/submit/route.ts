@@ -47,9 +47,9 @@ export async function POST(req: NextRequest) {
       phone: phone || null,
       company: company || null,
       notes: message || null,
-      source: source || "INBOUND_WEBSITE",
-      stage: "NEW",
-      category: category || "OTHER",
+      source: (source || "INBOUND_WEBSITE") as never,
+      stage: "NEW" as never,
+      category: (category || "OTHER") as never,
     },
   });
 
