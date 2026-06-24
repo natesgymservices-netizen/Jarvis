@@ -52,8 +52,7 @@ export default async function DashboardPage() {
   const convRate     = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
   const pipelineVal  = pipelineAgg._sum.value ?? 0;
   const greeting     = getGreeting();
-  const rawFirst     = session?.user?.name?.split(" ")[0] ?? "Nathan";
-  const firstName    = rawFirst.endsWith("'s") ? rawFirst.slice(0, -2) : rawFirst;
+  const firstName    = "Nathan";
 
   return (
     <div className="flex flex-col min-h-screen p-6 gap-6">

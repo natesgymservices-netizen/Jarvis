@@ -13,7 +13,7 @@ export async function POST() {
 
     const threadsRes = await gmail.users.threads.list({
       userId: "me",
-      maxResults: 50,
+      maxResults: 25,
       labelIds: ["INBOX"],
     });
 
@@ -23,48 +23,58 @@ export async function POST() {
     for (const t of threads) {
       if (!t.id) continue;
 
-      const detail = await gmail.users.threads.get({ userId: "me", id: t.id, format: "metadata", metadataHeaders: ["Subject", "From", "To", "Date"] });
-      const msgs = detail.data.messages ?? [];
-      if (msgs.length === 0) continue;
+      try {
+        const detail = await gmail.users.threads.get({ userId: "me", id: t.id, format: "metadata", metadataHeaders: ["Subject", "From", "To", "Date"] });
+        const msgs = detail.data.messages ?? [];
+        if (msgs.length === 0) continue;
 
-      const firstMsg = msgs[0];
-      const lastMsg = msgs[msgs.length - 1];
-      const headers = firstMsg.payload?.headers ?? [];
+        const firstMsg = msgs[0];
+        const lastMsg = msgs[msgs.length - 1];
+        const headers = firstMsg.payload?.headers ?? [];
 
-      const subject = getHeader(headers, "subject");
-      const from = getHeader(headers, "from");
-      const to = getHeader(headers, "to");
+        const subject = getHeader(headers, "subject");
+        const from = getHeader(headers, "from");
+        const to = getHeader(headers, "to");
 
-      const participants = [from, to]
-        .filter(Boolean)
-        .flatMap((r) => r.split(","))
-        .map((r) => parseEmailAddress(r.trim()).email)
-        .filter((e) => e && e.includes("@"));
+        const participants = [from, to]
+          .filter(Boolean)
+          .flatMap((r) => r.split(","))
+          .map((r) => parseEmailAddress(r.trim()).email)
+          .filter((e) => e && e.includes("@"));
 
-      const lastDate = lastMsg.internalDate
-        ? new Date(parseInt(lastMsg.internalDate))
-        : null;
+        const lastHeaders = lastMsg.payload?.headers ?? [];
+        const lastFrom = getHeader(lastHeaders, "from");
+        const lastSenderEmail = parseEmailAddress(lastFrom).email || null;
 
-      await prisma.emailThread.upsert({
-        where: { gmailId: t.id },
-        update: {
-          subject: subject || null,
-          snippet: detail.data.snippet || null,
-          participants,
-          messageCount: msgs.length,
-          lastMessageAt: lastDate,
-          updatedAt: new Date(),
-        },
-        create: {
-          gmailId: t.id,
-          subject: subject || null,
-          snippet: detail.data.snippet || null,
-          participants,
-          messageCount: msgs.length,
-          lastMessageAt: lastDate,
-        },
-      });
-      synced++;
+        const lastDate = lastMsg.internalDate
+          ? new Date(parseInt(lastMsg.internalDate))
+          : null;
+
+        await prisma.emailThread.upsert({
+          where: { gmailId: t.id },
+          update: {
+            subject: subject || null,
+            snippet: detail.data.snippet || null,
+            participants,
+            messageCount: msgs.length,
+            lastMessageAt: lastDate,
+            lastSenderEmail,
+            updatedAt: new Date(),
+          },
+          create: {
+            gmailId: t.id,
+            subject: subject || null,
+            snippet: detail.data.snippet || null,
+            participants,
+            messageCount: msgs.length,
+            lastMessageAt: lastDate,
+            lastSenderEmail,
+          },
+        });
+        synced++;
+      } catch (threadErr) {
+        console.error(`Skipping thread ${t.id}:`, threadErr instanceof Error ? threadErr.message : threadErr);
+      }
     }
 
     await prisma.gmailSyncState.upsert({

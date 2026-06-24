@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Mail, DollarSign, Megaphone } from "lucide-react";
+import { LayoutDashboard, Users, Mail, DollarSign, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/dashboard",           label: "HOME",      icon: LayoutDashboard },
-  { href: "/dashboard/leads",     label: "LEADS",     icon: Users           },
-  { href: "/dashboard/gmail",     label: "COMMS",     icon: Mail            },
-  { href: "/dashboard/revenue",   label: "REVENUE",   icon: DollarSign      },
-  { href: "/dashboard/campaigns", label: "OPS",       icon: Megaphone       },
+  { href: "/dashboard",           label: "HOME",     icon: LayoutDashboard },
+  { href: "/dashboard/leads",     label: "LEADS",    icon: Users           },
+  { href: "/dashboard/gmail",     label: "COMMS",    icon: Mail            },
+  { href: "/dashboard/revenue",   label: "REVENUE",  icon: DollarSign      },
+  { href: "/dashboard/marketing", label: "MKTG",     icon: Rocket          },
 ];
 
 export function MobileNav() {

@@ -4,18 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Mail, DollarSign,
-  Megaphone, Share2, Zap, LogOut,
+  Megaphone, Share2, Zap, LogOut, Rocket,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { href: "/dashboard",           label: "OVERVIEW",   icon: LayoutDashboard },
-  { href: "/dashboard/leads",     label: "LEADS",      icon: Users           },
-  { href: "/dashboard/gmail",     label: "COMMS",      icon: Mail            },
-  { href: "/dashboard/revenue",   label: "REVENUE",    icon: DollarSign      },
-  { href: "/dashboard/campaigns", label: "CAMPAIGNS",  icon: Megaphone       },
-  { href: "/dashboard/social",    label: "SOCIAL",     icon: Share2          },
+  { href: "/dashboard",            label: "OVERVIEW",   icon: LayoutDashboard },
+  { href: "/dashboard/leads",      label: "LEADS",      icon: Users           },
+  { href: "/dashboard/gmail",      label: "COMMS",      icon: Mail            },
+  { href: "/dashboard/revenue",    label: "REVENUE",    icon: DollarSign      },
+  { href: "/dashboard/campaigns",  label: "CAMPAIGNS",  icon: Megaphone       },
+  { href: "/dashboard/social",     label: "SOCIAL",     icon: Share2          },
+  { href: "/dashboard/marketing",  label: "MARKETING",  icon: Rocket          },
 ];
 
 export function Sidebar() {

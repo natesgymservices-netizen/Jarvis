@@ -122,6 +122,7 @@ model Lead {
   activities   LeadActivity[]
   emailThreads EmailThread[]
   revenue      Revenue[]
+  enrollments  SequenceEnrollment[]
 
   @@index([business])
   @@index([stage])
@@ -174,20 +175,31 @@ model Revenue {
 // ─── Gmail Sync ───────────────────────────────────────────────────────────────
 
 model EmailThread {
-  id           String    @id @default(cuid())
-  gmailId      String    @unique
-  leadId       String?
-  lead         Lead?     @relation(fields: [leadId], references: [id])
-  subject      String?
-  snippet      String?   @db.Text
-  participants String[]
-  messageCount Int       @default(1)
-  lastMessageAt DateTime?
-  syncedAt     DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  gmailId         String    @unique
+  leadId          String?
+  lead            Lead?     @relation(fields: [leadId], references: [id])
+  subject         String?
+  snippet         String?   @db.Text
+  participants    String[]
+  messageCount    Int       @default(1)
+  lastMessageAt   DateTime?
+  lastSenderEmail String?
+  syncedAt        DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // AI analysis
+  aiAnalyzed    Boolean   @default(false)
+  isLead        Boolean?
+  needsFollowUp Boolean   @default(false)
+  aiSummary     String?   @db.Text
+  followUpDraft String?   @db.Text
+  lastRepliedAt DateTime?
 
   @@index([leadId])
   @@index([lastMessageAt])
+  @@index([aiAnalyzed])
+  @@index([needsFollowUp])
 }
 
 model GmailSyncState {
@@ -236,6 +248,108 @@ model CampaignContact {
   repliedAt   DateTime?
 
   @@index([campaignId])
+}
+
+// ─── Marketing Automation ─────────────────────────────────────────────────────
+
+enum MarketingPostStatus {
+  DRAFT
+  APPROVED
+  SCHEDULED
+  POSTED
+}
+
+model MarketingPost {
+  id          String              @id @default(cuid())
+  business    BusinessUnit
+  platforms   String[]
+  content     String              @db.Text
+  hashtags    String[]
+  status      MarketingPostStatus @default(DRAFT)
+  scheduledAt DateTime?
+  postedAt    DateTime?
+  viralScore  Int?
+  topic       String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([business])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+enum SequenceStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+model EmailSequence {
+  id          String               @id @default(cuid())
+  business    BusinessUnit
+  name        String
+  description String?              @db.Text
+  target      String?
+  status      SequenceStatus       @default(ACTIVE)
+  steps       EmailSequenceStep[]
+  enrollments SequenceEnrollment[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([business])
+}
+
+model EmailSequenceStep {
+  id         String        @id @default(cuid())
+  sequenceId String
+  sequence   EmailSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  stepNumber Int
+  delayDays  Int           @default(0)
+  subject    String
+  body       String        @db.Text
+  createdAt  DateTime      @default(now())
+
+  @@index([sequenceId])
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  UNSUBSCRIBED
+}
+
+model SequenceEnrollment {
+  id          String           @id @default(cuid())
+  sequenceId  String
+  sequence    EmailSequence    @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  leadId      String?
+  lead        Lead?            @relation(fields: [leadId], references: [id])
+  email       String
+  name        String?
+  currentStep Int              @default(1)
+  status      EnrollmentStatus @default(ACTIVE)
+  enrolledAt  DateTime         @default(now())
+  nextSendAt  DateTime?
+  completedAt DateTime?
+
+  @@index([sequenceId])
+  @@index([status])
+  @@index([nextSendAt])
+}
+
+model PlatformCredential {
+  id           String    @id @default(cuid())
+  platform     String
+  accessToken  String?   @db.Text
+  refreshToken String?   @db.Text
+  pageId       String?
+  accountId    String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([platform])
 }
 
 // ─── Social Content ───────────────────────────────────────────────────────────
